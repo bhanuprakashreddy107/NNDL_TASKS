@@ -1,0 +1,246 @@
+------------------- Task-1-Perceptron --------------------
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.linear_model import Perceptron
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Load the iris dataset
+iris = datasets.load_iris()
+
+# Split the dataset into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2)
+
+# Create a perceptron model
+perceptron = Perceptron()
+
+# Train the model
+perceptron.fit(X_train, y_train)
+
+# Predict the labels for the test set
+y_pred = perceptron.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+
+------------------- Task-2-Activation Function--------------------
+
+
+import numpy as np
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def tanh(x):
+    return np.tanh(x)
+
+def relu(x):
+    return np.maximum(0, x)
+
+def leaky_relu(x, alpha=0.01):
+    return np.maximum(alpha * x, x)
+
+def softmax(x):
+    exp_x = np.exp(x)
+    return exp_x / np.sum(exp_x)
+
+x = np.array([-1, 0, 1])
+
+# Sigmoid
+print(sigmoid(x))
+
+# Tanh
+print(tanh(x))
+
+# ReLU
+print(relu(x))
+
+# Leaky ReLU
+print(leaky_relu(x))
+
+# Softmax
+print(softmax(x))
+
+
+------------------------ Task-3-Three Layer ANN -----------------
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_breast_cancer
+from sklearn.metrics import accuracy_score
+
+df = load_breast_cancer()
+
+X = df.data
+y = df.target
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+import tensorflow as tf
+
+model = tf.keras.Sequential([
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid'),
+])
+
+model.compile(
+    loss=tf.keras.losses.binary_crossentropy,
+    optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+    metrics=['accuracy']
+)
+
+history = model.fit(X_train, y_train, epochs=5)
+
+predictions = model.predict(X_test)
+
+y_pred = []
+for pred in predictions:
+    if pred >= 0.5:
+        y_pred.append(1)
+    else:
+        y_pred.append(0) 
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+
+
+----------------------- Task-4-GRU-LSTM ---------------------
+
+
+import numpy as np
+from tensorflow.keras.datasets import imdb
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, GRU, LSTM, Dense 
+
+# Load IMDb dataset
+vocab_size = 10000
+max_length = 200
+(X_train, y_train), (X_test, y_test) = imdb.load_data(num_words=vocab_size)
+X_train = pad_sequences(X_train, maxlen=max_length)
+X_test = pad_sequences(X_test, maxlen=max_length)
+
+# Build GRU-based model
+gru_model = Sequential()
+gru_model.add(Embedding(input_dim=vocab_size, output_dim=128, input_length=max_length))
+gru_model.add(GRU(128))
+gru_model.add(Dense(1, activation='sigmoid'))
+gru_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Train GRU model
+gru_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=1, batch_size=64)
+
+# Build LSTM-based model
+lstm_model = Sequential()
+lstm_model.add(Embedding(input_dim=vocab_size, output_dim=128, input_length=max_length))
+lstm_model.add(LSTM(128))
+lstm_model.add(Dense(1, activation='sigmoid'))
+lstm_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Train LSTM model
+lstm_model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=1, batch_size=64)
+
+# Evaluate models
+gru_score = gru_model.evaluate(X_test, y_test, verbose=0)
+lstm_score = lstm_model.evaluate(X_test, y_test, verbose=0)
+
+print("GRU Model - Accuracy: {:.2f}%".format(gru_score[1] * 100))
+print("LSTM Model - Accuracy: {:.2f}%".format(lstm_score[1] * 100))
+
+
+---------------------------- Task-5-Multi class classification for Reuters dataset ----------------------------------
+
+
+import tensorflow as tf
+from tensorflow.keras.datasets import reuters
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras import layers, models
+
+# Load the Reuters dataset
+(train_data, train_labels), (test_data, test_labels) = reuters.load_data(num_words=10000)
+
+# Preprocess the data
+max_len = 200  # Set the maximum length of each document
+train_data = pad_sequences(train_data, maxlen=max_len)
+test_data = pad_sequences(test_data, maxlen=max_len)
+
+# One-hot encode the labels
+train_labels = to_categorical(train_labels)
+test_labels = to_categorical(test_labels)
+
+# Define the neural network model
+model = models.Sequential()
+model.add(layers.Embedding(input_dim=10000, output_dim=128, input_length=max_len))
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(46, activation='softmax'))  # 46 output classes for Reuters dataset
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+model.fit(train_data, train_labels, epochs=2, batch_size=64, validation_split=0.2)
+
+# Evaluate the model on the test set
+test_loss, test_acc = model.evaluate(test_data, test_labels)
+print(f'Test accuracy: {test_acc}')
+
+
+
+----------------------------- Task-6-MNIST Handwritten Dataset---------------
+
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+
+# Load and preprocess the MNIST dataset
+(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
+
+# Normalize pixel values to be between 0 and 1
+train_images, test_images = train_images / 255.0, test_images / 255.0
+
+# Add a channel dimension (for convolutional layers)
+train_images = train_images.reshape((60000, 28, 28, 1))
+test_images = test_images.reshape((10000, 28, 28, 1))
+
+# One-hot encode the labels
+train_labels = to_categorical(train_labels)
+test_labels = to_categorical(test_labels)
+
+# Define the CNN model
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(10, activation='softmax'))
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+model.fit(train_images, train_labels, epochs=2, batch_size=64, validation_split=0.2)
+
+# Evaluate the model on the test set
+test_loss, test_acc = model.evaluate(test_images, test_labels)
+print(f'Test accuracy: {test_acc}')
